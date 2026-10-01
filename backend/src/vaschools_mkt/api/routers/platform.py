@@ -4,13 +4,15 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import redis.asyncio as redis
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from vaschools_mkt.api.deps import get_current_user
 from vaschools_mkt.api.provider_http import raise_provider_http
+from vaschools_mkt.api.serp_access import assert_serp_search_allowed
+from vaschools_mkt.api.serp_quota import assert_within_cap, consume, current_usage
 from vaschools_mkt.core.config import settings
 from vaschools_mkt.core.models import SessionUser
 from vaschools_mkt.core.provenance import Provenance
@@ -102,6 +104,10 @@ async def platform_status(
             "serp_provider": settings.serp_provider,
             "serp_provider_configured": settings.serp_provider_configured,
             "serp_snapshot_total": _metric(serp_snapshot_total, Provenance.MEASURED),
+            "serp_quota": {
+                "used": await current_usage(),
+                "cap": settings.monthly_serp_request_cap,
+            },
             "google_ads_configured": settings.google_ads_configured,
             "environment": settings.environment,
         },
@@ -120,41 +126,14 @@ async def serp_probe(
     body: SerpProbeIn,
     _user: SessionUser = Depends(get_current_user),
 ):
-    """Gọi SerpAPI thật (tuần 1). Chỉ bật ở development — production dùng job batch tuần 2+."""
+    """Gọi SerpAPI thật và lưu snapshot. Tốn tiền — chịu trần chi phí tháng."""
 
-    if settings.environment != "development":
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": {
-                    "code": "FORBIDDEN",
-                    "message": "Probe SERP chỉ dùng trong môi trường development.",
-                }
-            },
-        )
-    if settings.serp_provider == "fake":
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": {
-                    "code": "SERP_FAKE",
-                    "message": "Đặt SERP_PROVIDER=serpapi và SERP_API_KEY trong .env.",
-                }
-            },
-        )
-    if not settings.serp_provider_configured:
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "error": {
-                    "code": "PROVIDER_NOT_CONFIGURED",
-                    "message": "Thiếu cấu hình SerpAPI (SERP_API_KEY).",
-                }
-            },
-        )
+    assert_serp_search_allowed()
 
     provider = get_serp_provider()
     cost = provider.estimate_cost(1)
+
+    await assert_within_cap(cost.request_units)
 
     try:
         responses = await provider.fetch_serp(
@@ -166,6 +145,8 @@ async def serp_probe(
         )
     except ProviderError as exc:
         raise_provider_http(exc)
+
+    used = await consume(cost.request_units)
 
     response = responses[0]
     top = response.results[0] if response.results else None
@@ -210,5 +191,9 @@ async def serp_probe(
             "snapshot_id": snapshot_id,
             "persist_note": persist_note,
         },
-        "meta": {"data_fetched_at": now, "is_stale": False},
+        "meta": {
+            "data_fetched_at": now,
+            "is_stale": False,
+            "quota": {"used": used, "cap": settings.monthly_serp_request_cap},
+        },
     }

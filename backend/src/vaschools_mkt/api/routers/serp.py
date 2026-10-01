@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from vaschools_mkt.api.deps import get_current_user
 from vaschools_mkt.api.provider_http import raise_provider_http
 from vaschools_mkt.api.serp_access import assert_serp_search_allowed
+from vaschools_mkt.api.serp_quota import assert_within_cap, consume
 from vaschools_mkt.core.config import settings
 from vaschools_mkt.core.models import SessionUser
 from vaschools_mkt.core.provenance import Provenance
@@ -44,6 +45,9 @@ async def serp_search(
     provider = get_serp_provider()
     cost = provider.estimate_cost(1)
 
+    # Chặn trước khi gọi: vượt trần thì không tiêu thêm tiền.
+    await assert_within_cap(cost.request_units)
+
     try:
         responses = await provider.fetch_serp(
             [query],
@@ -54,6 +58,9 @@ async def serp_search(
         )
     except ProviderError as exc:
         raise_provider_http(exc)
+
+    # Chỉ tính sau khi provider trả kết quả — request lỗi không bị tính tiền.
+    used = await consume(cost.request_units)
 
     response = responses[0]
     ideas = extract_keyword_ideas(response.raw, seed_query=query)
@@ -87,5 +94,9 @@ async def serp_search(
             "organic": organic,
             "estimated_cost_usd": str(cost.usd.quantize(Decimal("0.0001"))),
         },
-        "meta": {"data_fetched_at": now, "is_stale": False},
+        "meta": {
+            "data_fetched_at": now,
+            "is_stale": False,
+            "quota": {"used": used, "cap": settings.monthly_serp_request_cap},
+        },
     }

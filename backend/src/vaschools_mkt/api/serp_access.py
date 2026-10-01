@@ -1,4 +1,8 @@
-"""Kiểm tra quyền gọi SerpAPI từ API (tuần 1 — development)."""
+"""Kiểm tra quyền gọi SerpAPI.
+
+Mỗi request tốn tiền thật, nên phải qua hai cửa: cấu hình hợp lệ (file này) và
+trần chi phí tháng (`serp_quota.py`).
+"""
 
 from fastapi import HTTPException
 
@@ -6,16 +10,6 @@ from vaschools_mkt.core.config import settings
 
 
 def assert_serp_search_allowed() -> None:
-    if settings.environment != "development":
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": {
-                    "code": "FORBIDDEN",
-                    "message": "Tìm kiếm SerpAPI chỉ bật trong môi trường development.",
-                }
-            },
-        )
     if settings.serp_provider == "fake":
         raise HTTPException(
             status_code=400,

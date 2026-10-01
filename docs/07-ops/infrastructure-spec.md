@@ -165,12 +165,24 @@ python3.11  python3.11-venv  python3.11-dev  sqlite3
 
 Bảng của schema v1: `domains`, `keywords`, `serp_snapshots`, `rankings`.
 
+Dữ liệu đã nạp (2026-10-01):
+
+| Bảng | Số dòng | Nguồn |
+|---|---|---|
+| `keywords` | 3.348 | 1.553 seed/tổ hợp YAML + 1.795 Google Suggest |
+| `domains` | 1 | `vaschools.edu.vn` (`is_ours=true`) |
+| `serp_snapshots` | 1 | Probe kiểm chứng |
+
+Đạt mục tiêu tuần 1 (≥ 2.000 từ khóa nền). Nạp lại bằng
+`bootstrap_week1.py` — xem [runbook](deployment-runbook.md).
+
 ### Redis
 
 | Hạng mục | Giá trị |
 |---|---|
 | Host / port | `localhost:6379` |
 | **Database index** | **3** |
+| Key đang dùng | `serp:requests:<YYYY-MM>` — bộ đếm quota SerpAPI, TTL 70 ngày |
 
 > Redis **không có cơ chế phân quyền theo user**. Db index là ranh giới cô lập
 > duy nhất giữa các ứng dụng trên máy này. Dùng db 0 sẽ trộn key với site khác,
@@ -302,7 +314,7 @@ if ($scheme_custom != "https") {
 | `VITE_API_URL` | *(rỗng)* |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Đã cấu hình |
 | `GOOGLE_ALLOWED_DOMAINS` | `vaschools.edu.vn,hcm.vaschools.edu.vn` |
-| `SERP_PROVIDER` | `serpapi` (đã có key) |
+| `SERP_PROVIDER` | `serpapi` (đã có key — **gọi thật, tốn tiền**) |
 | `KEYWORD_PLANNER_PROVIDER` | `fake` |
 | `BACKLINK_PROVIDER` | `fake` |
 | `MONTHLY_SERP_REQUEST_CAP` | `20000` |

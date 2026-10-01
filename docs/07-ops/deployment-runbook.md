@@ -385,6 +385,44 @@ vỡ tương thích:
 [server] curl -s http://127.0.0.1:8090/health/deep
 ```
 
+### Nạp lại seed keywords
+
+Script idempotent — chạy nhiều lần an toàn, trùng thì bỏ qua (`ON CONFLICT DO
+NOTHING`). Dùng Google Suggest (**miễn phí**, không tốn SERP API).
+
+```bash
+[server] SITE=/home/vaschools-marhub/htdocs/marhub.vaschools.edu.vn
+[server] sudo -u vaschools-marhub bash -c "cd $SITE/current/backend &&          set -a && . $SITE/shared/.env && set +a &&          PYTHONPATH=src $SITE/shared/venv/bin/python          -m vaschools_mkt.scripts.bootstrap_week1 --skip-migrate"
+```
+
+Thêm `--dry-run` để đếm trước mà không ghi DB. Thêm `--skip-expand` nếu chỉ
+muốn tạo domain.
+
+Mở rộng bộ từ khóa: sửa `backend/src/vaschools_mkt/data/seed_keywords.yaml`,
+deploy, rồi chạy lại lệnh trên.
+
+### Theo dõi và chỉnh quota SerpAPI
+
+Mỗi request tốn ~0.0075 USD. Bộ đếm nằm ở Redis db 3, key theo tháng.
+
+```bash
+[server] redis-cli -n 3 get serp:requests:$(date +%Y-%m)      # đã dùng
+[server] redis-cli -n 3 ttl serp:requests:$(date +%Y-%m)      # còn sống bao lâu
+```
+
+Quota cũng hiển thị ở `/api/v1/platform/status` (trường `serp_quota`) và trong
+`meta.quota` của mọi response SERP.
+
+Đổi trần: sửa `MONTHLY_SERP_REQUEST_CAP` trong `shared/.env` rồi restart service.
+
+> **Chỉnh tay bộ đếm bằng `SET` sẽ xoá TTL.** Nhớ đặt lại, nếu không key tồn tại
+> vĩnh viễn:
+>
+> ```bash
+> [server] redis-cli -n 3 set serp:requests:$(date +%Y-%m) <giá-trị>
+> [server] redis-cli -n 3 expire serp:requests:$(date +%Y-%m) 6048000
+> ```
+
 ### Sao lưu database thủ công
 
 ```bash
@@ -538,6 +576,19 @@ Cookie session không được giữ. Kiểm tra:
 | `SECRET_KEY` vừa đổi | Session cũ mất hiệu lực — đăng nhập lại là xong |
 | `ENVIRONMENT` không phải `production` | Cookie `https_only` sai cấu hình |
 | `FRONTEND_URL` ≠ `BACKEND_URL` | Hai giá trị phải giống nhau (same-origin) |
+
+### SERP trả 429 `SERP_MONTHLY_CAP`
+
+Đã dùng hết trần request SerpAPI của tháng. Đây là **phanh có chủ đích**, không
+phải lỗi.
+
+```bash
+[server] redis-cli -n 3 get serp:requests:$(date +%Y-%m)
+```
+
+Xử lý: chờ sang tháng (bộ đếm theo key tháng, tự reset), hoặc tăng
+`MONTHLY_SERP_REQUEST_CAP` trong `shared/.env` rồi restart — cân nhắc chi phí
+trước khi tăng.
 
 ### Hết dung lượng đĩa
 

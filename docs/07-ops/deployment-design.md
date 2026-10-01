@@ -411,7 +411,58 @@ có thể ghi đè vhost và làm lỗi quay lại. Kiểm tra sau mỗi lần �
 
 ---
 
-## 9. Bài học: sự cố rsync khi dựng hệ thống
+## 9. Trần chi phí SerpAPI
+
+Mỗi request SerpAPI tốn tiền thật (~0.0075 USD). Khi mở endpoint SERP ở
+production, cần một phanh cuối cùng để một vòng lặp hỏng hay một người dùng
+nhiệt tình không đốt hết ngân sách tháng.
+
+**Thiết kế gốc chặn bằng environment** — `serp_access.py` chỉ cho gọi khi
+`ENVIRONMENT=development`. An toàn tuyệt đối, nhưng đồng nghĩa production không
+dùng được tính năng. Thay bằng trần theo số request.
+
+**Bộ đếm nằm ở Redis, không phải PostgreSQL.** `INCR` là atomic: hai request
+đồng thời không thể cùng đọc một giá trị cũ rồi cùng ghi đè. Làm bằng
+`UPDATE ... SET n = n + 1` trong Postgres cũng được, nhưng tốn một transaction
+cho việc mà Redis làm trong một lệnh.
+
+Key theo tháng (`serp:requests:2026-10`), TTL 70 ngày:
+
+| Quyết định | Lý do |
+|---|---|
+| Key theo tháng | Trần là theo tháng, nên reset tự nhiên khi sang tháng mới — không cần job dọn |
+| TTL 70 ngày | Giữ qua 2 kỳ hóa đơn để đối chiếu tháng trước; sau đó tự biến mất |
+| Đặt TTL chỉ khi `total == units` | Lần `INCR` đầu tiên của tháng. Đặt mỗi lần sẽ gia hạn vô tận và key không bao giờ hết hạn |
+| Redis lỗi → trả 0, không chặn | Mất Redis không nên làm chết tính năng. Đánh đổi: mất phanh tạm thời, ghi `log.warning` |
+
+**Thứ tự gọi quan trọng:**
+
+```python
+await assert_within_cap(cost.request_units)   # chặn TRƯỚC khi tốn tiền
+responses = await provider.fetch_serp(...)
+used = await consume(cost.request_units)      # tính SAU khi có kết quả
+```
+
+Tính sau nghĩa là request lỗi (timeout, 500 từ provider) không bị trừ quota —
+người dùng không mất lượt vì sự cố của bên thứ ba.
+
+Quota hiển thị ở `meta.quota` của mọi response SERP và ở
+`/api/v1/platform/status`, để người dùng thấy mình còn bao nhiêu trước khi
+chạm trần.
+
+### Rò rỉ API key qua log
+
+Phát hiện khi test: `httpx` log mỗi request ở mức INFO **kèm URL đầy đủ**, và
+URL của SerpAPI mang `api_key` trong query string. Để mặc định là ghi thẳng
+khóa bí mật vào `api.log`.
+
+Các script CLI đã có `logging.getLogger("httpx").setLevel(WARNING)`, nhưng
+`main.py` thì thiếu — đã bổ sung. Đáng nhớ: khóa bí mật rò rỉ không chỉ qua
+`print`, mà qua bất kỳ thư viện nào log URL.
+
+---
+
+## 10. Bài học: sự cố rsync khi dựng hệ thống
 
 Ghi lại vì nó định hình một ràng buộc trong script hiện tại.
 

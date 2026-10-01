@@ -24,6 +24,9 @@ logging.basicConfig(
     level=logging.INFO,
     format='{"ts":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s"}',
 )
+# httpx log mỗi request ở mức INFO kèm URL đầy đủ — URL của SerpAPI mang
+# api_key trong query string, nên để INFO là ghi thẳng khóa bí mật vào log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 
 app = FastAPI(
