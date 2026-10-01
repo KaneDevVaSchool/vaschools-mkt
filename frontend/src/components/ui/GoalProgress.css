@@ -7,45 +7,110 @@
 .goal-progress__row {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-2);
-    font-size: 0.8125rem;
+    gap: var(--space-2) var(--space-4);
 }
 
 .goal-progress__label {
-    font-weight: 700;
-    color: var(--color-text);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-subtle);
 }
 
-.goal-progress__nums {
-    color: var(--color-text-muted);
+/* Số liệu: giá trị nổi hẳn lên, mốc mục tiêu nhỏ hơn bên cạnh */
+.goal-progress__figures {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
     font-variant-numeric: tabular-nums;
 }
 
-.goal-progress__track {
-    height: 0.625rem;
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-border) 35%, var(--color-surface-muted));
-    overflow: hidden;
-    box-shadow: inset 0 1px 2px rgba(20, 20, 24, 0.06);
+.goal-progress__value {
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: var(--color-text);
 }
 
-.goal-progress__track--done .goal-progress__fill {
-    background: linear-gradient(
-        90deg,
-        var(--prov-measured),
-        color-mix(in srgb, var(--prov-measured) 75%, #22c55e)
-    );
+.goal-progress__goal {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-subtle);
+}
+
+.goal-progress__pct {
+    margin-left: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-accent-strong);
+}
+
+.goal-progress--done .goal-progress__pct {
+    background: var(--c-teal-50);
+    border-color: color-mix(in srgb, var(--c-teal-700) 24%, transparent);
+    color: var(--c-teal-700);
+}
+
+/* Thanh tiến độ: góc vuông mềm (không pill), có vạch mốc 25/50/75% */
+.goal-progress__track {
+    position: relative;
+    height: 0.5rem;
+    border-radius: var(--radius-xs);
+    background: var(--color-surface-sunken);
+    border: 1px solid var(--color-border-subtle);
+    overflow: hidden;
 }
 
 .goal-progress__fill {
+    position: relative;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(
-        90deg,
-        var(--color-primary-900),
-        var(--color-primary-600)
-    );
-    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-600) 35%, transparent);
+    background: linear-gradient(90deg, var(--c-indigo-700), var(--c-indigo-500));
+    transition: width var(--dur-slower) var(--ease-out);
+}
+
+/* Vệt sáng chạy qua một lần khi giá trị vào màn hình */
+.goal-progress__fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    animation: sheen-sweep 1.8s var(--ease-in-out) 0.3s both;
+}
+
+.goal-progress--done .goal-progress__fill {
+    background: linear-gradient(90deg, var(--c-teal-700), var(--c-teal-500));
+}
+
+/* Vạch mốc phần tư — giúp đọc tiến độ không cần nhìn số */
+.goal-progress__ticks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    pointer-events: none;
+}
+
+.goal-progress__tick {
+    flex: 1;
+    border-right: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+.goal-progress__tick:last-child {
+    border-right: none;
+}
+
+.goal-progress__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
 }

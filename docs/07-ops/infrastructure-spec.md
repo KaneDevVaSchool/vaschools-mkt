@@ -79,15 +79,13 @@ tạo site, cấp chứng chỉ SSL, xem thông tin site. **Không** dùng để
 | Python version (thực dùng) | **3.11** — xem mục 5 |
 | SSL | Có, chứng chỉ tại `/etc/nginx/ssl-certificates/marhub.vaschools.edu.vn.{crt,key}` |
 
-### DNS — cần xử lý
+### DNS
 
 | | |
 |---|---|
-| A record hiện tại | `115.73.210.29` |
-| Phải trỏ về | `113.176.63.40` |
+| A record | `113.176.63.40` ✓ |
 
-Ứng dụng đã được kiểm chứng chạy đúng bằng `curl --resolve`, nhưng **domain chưa
-vào được từ Internet** cho tới khi sửa A record.
+Đã trỏ đúng từ 2026-10-01. Site truy cập được từ Internet.
 
 ---
 
@@ -255,6 +253,37 @@ location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|svg|woff|woff2|...)$ {
 Đây là template mặc định của CloudPanel. Deploy đồng bộ asset vào document root
 để thuận theo nó — xem [deployment-design.md §3.2](deployment-design.md).
 
+### Proxy biên đứng trước nginx
+
+Hạ tầng VAS có một reverse proxy biên **đứng trước nginx của VPS**. Nó terminate
+TLS rồi chuyển tiếp xuống nginx bằng **HTTP**, báo giao thức gốc qua header
+`X-Forwarded-Proto`.
+
+Hệ quả bắt buộc phải biết:
+
+| | |
+|---|---|
+| `$scheme` trong nginx | Luôn là `http`, kể cả khi người dùng vào bằng HTTPS |
+| Client IP trong access log | Là IP của server (`113.176.63.40`), không phải IP người dùng |
+| Vhost kiểm tra `$scheme` trực tiếp | **Redirect lặp vô hạn** |
+
+Vhost phải dùng mẫu này (giống mọi site khác trên VPS):
+
+```nginx
+set $scheme_custom $scheme;
+if ($http_x_forwarded_proto = "https") {
+  set $scheme_custom "https";
+}
+if ($scheme_custom != "https") {
+  rewrite ^ https://$host$uri permanent;
+}
+```
+
+> **Template Python site của CloudPanel thiếu đoạn này** (template PHP và Node.js
+> đều có). Đã sửa thủ công ngày 2026-10-01. Nếu sửa site qua UI CloudPanel,
+> vhost có thể bị ghi đè và lỗi `ERR_TOO_MANY_REDIRECTS` quay lại — kiểm tra
+> lại sau mỗi lần đụng UI.
+
 ---
 
 ## 9. Cấu hình ứng dụng
@@ -319,8 +348,8 @@ Chỉ email thuộc `vaschools.edu.vn` và `hcm.vaschools.edu.vn` đăng nhập 
 | Hạng mục | Mức | Hiện trạng |
 |---|---|---|
 | **Backup PostgreSQL** | Cao | **Chưa có.** Cần cron `pg_dump` hàng ngày, giữ 30 ngày |
-| **DNS trỏ sai** | Cao | Cần sửa A record về `113.176.63.40` |
 | **Google redirect URI** | Cao | Cần thêm vào Cloud Console |
+| **Vhost sửa thủ công** | Trung bình | Đoạn `X-Forwarded-Proto` không nằm trong template CloudPanel; sửa site qua UI có thể ghi đè |
 | Staging | Trung bình | Chưa có. Deploy thẳng production |
 | Giám sát / cảnh báo | Trung bình | Chưa có. Mới có endpoint health, chưa ai gọi định kỳ |
 | Celery worker/beat | — | Thuộc tuần 2, chưa triển khai |

@@ -48,7 +48,7 @@
 }
 
 .surface-card--interactive:hover {
-    border-color: color-mix(in srgb, var(--color-primary-600) 22%, var(--color-border));
+    border-color: color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
     box-shadow: var(--shadow-card-hover);
     transform: translateY(-2px);
 }
@@ -63,16 +63,18 @@
     animation: fade-rise var(--dur-slow) var(--ease-out) both;
 }
 
-/* Vạch nhấn trên đầu panel — gradient brand, có vệt sáng chạy qua một lần khi mount */
+/* Vạch nhấn trên đầu panel — pha từ indigo → teal → gold (đỏ để riêng cho sidebar),
+   có vệt sáng chạy qua một lần khi mount */
 .panel__strip {
     position: relative;
     height: 3px;
     overflow: hidden;
     background: linear-gradient(
         90deg,
-        var(--color-primary-800) 0%,
-        var(--color-primary-500) 45%,
-        var(--color-gold) 100%
+        var(--c-indigo-700) 0%,
+        var(--c-indigo-500) 28%,
+        var(--c-teal-500) 64%,
+        var(--c-gold-500) 100%
     );
 }
 

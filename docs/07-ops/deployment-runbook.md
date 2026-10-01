@@ -433,6 +433,62 @@ Sửa bằng cách bọc single-quote quanh giá trị bị lỗi.
 Nếu thấy `SECRET_KEY mặc định không được dùng ở production`: `.env` vẫn còn
 `SECRET_KEY=dev-only-...`. Sinh key mới và thay vào.
 
+### ERR_TOO_MANY_REDIRECTS — vòng lặp redirect HTTPS
+
+**Triệu chứng.** Trình duyệt báo "đã chuyển hướng bạn quá nhiều lần". Từ ngoài
+Internet mọi request trả `301` về chính URL đó, nhưng gọi thẳng trên server lại
+trả `200`:
+
+```bash
+[local]  curl -sI https://marhub.vaschools.edu.vn/            # 301 lặp vô hạn
+[server] curl -sk --resolve marhub.vaschools.edu.vn:443:127.0.0.1          -o /dev/null -w "%{http_code}
+" https://marhub.vaschools.edu.vn/   # 200
+```
+
+**Nguyên nhân.** Hạ tầng VAS có một **reverse proxy biên đứng trước nginx**. Nó
+terminate TLS rồi chuyển tiếp xuống nginx bằng **HTTP**, và báo giao thức gốc
+qua header `X-Forwarded-Proto`. Với nginx, biến `$scheme` khi đó luôn là
+`http` — kể cả khi người dùng vào bằng HTTPS.
+
+Dấu hiệu nhận biết trong access log: client IP là **chính IP của server**
+(`113.176.63.40`) chứ không phải IP người dùng.
+
+Vhost nào kiểm tra `$scheme` trực tiếp sẽ redirect sang HTTPS mãi mãi:
+
+```nginx
+if ($scheme != "https") {              # ✗ luôn đúng → lặp vô hạn
+  rewrite ^ https://$host$uri permanent;
+}
+```
+
+**Trạng thái: đã sửa** ngày 2026-10-01. Mục này giữ lại vì lỗi sẽ quay lại nếu
+vhost bị CloudPanel ghi đè.
+
+**Cách sửa.** Tin `X-Forwarded-Proto`, giống mọi site khác trên VPS:
+
+```nginx
+set $scheme_custom $scheme;
+if ($http_x_forwarded_proto = "https") {
+  set $scheme_custom "https";
+}
+if ($scheme_custom != "https") {       # ✓
+  rewrite ^ https://$host$uri permanent;
+}
+```
+
+Áp dụng:
+
+```bash
+[server] sudo cp /etc/nginx/sites-enabled/marhub.vaschools.edu.vn.conf{,.bak}
+[server] sudo nano /etc/nginx/sites-enabled/marhub.vaschools.edu.vn.conf
+[server] sudo nginx -t          # BẮT BUỘC — sai cú pháp sẽ làm sập mọi site
+[server] sudo systemctl reload nginx
+```
+
+> **Template Python site của CloudPanel thiếu đoạn này**, trong khi template PHP
+> và Node.js đều có. Nếu tạo lại site hoặc sửa site qua UI CloudPanel, vhost có
+> thể bị ghi đè và lỗi quay lại — kiểm tra lại sau mỗi lần đụng UI.
+
 ### Trang trắng, console báo lỗi tải file JS
 
 Asset ở document root không khớp với `index.html` của bản đang chạy.

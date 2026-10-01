@@ -357,18 +357,61 @@ Xem [deployment.md](deployment.md#sao-lưu).
 | **Một điểm chết** | Thấp | Một VPS, không HA. Chấp nhận được với công cụ nội bộ |
 | **SECRET_KEY xoay vòng làm mất session** | Thấp | Đổi key khiến mọi người phải đăng nhập lại. Không mất dữ liệu |
 
-### Hai việc cần làm ngoài phạm vi kỹ thuật
+### Việc còn lại ngoài phạm vi kỹ thuật
 
-1. **DNS.** `marhub.vaschools.edu.vn` đang trỏ `115.73.210.29`, VPS này là
-   `113.176.63.40`. App đã verify chạy đúng (qua `curl --resolve`), nhưng domain
-   chưa vào được từ Internet cho tới khi sửa A record.
-2. **Google Cloud Console.** Phải thêm
-   `https://marhub.vaschools.edu.vn/auth/google/callback` vào Authorized
-   redirect URIs, nếu không đăng nhập sẽ lỗi `redirect_uri_mismatch`.
+**Google Cloud Console.** Phải thêm
+`https://marhub.vaschools.edu.vn/auth/google/callback` vào Authorized redirect
+URIs, nếu không đăng nhập sẽ lỗi `redirect_uri_mismatch`.
+
+*(DNS đã trỏ đúng về `113.176.63.40` từ 2026-10-01.)*
 
 ---
 
-## 8. Bài học: sự cố rsync khi dựng hệ thống
+## 8. Proxy biên và `X-Forwarded-Proto`
+
+Phát hiện khi site lên Internet lần đầu, đáng ghi lại vì nó không nhìn thấy được
+từ bên trong server.
+
+Hạ tầng VAS có một **reverse proxy biên đứng trước nginx của VPS**. Nó terminate
+TLS rồi chuyển tiếp xuống nginx bằng HTTP. Với nginx, `$scheme` vì vậy **luôn**
+là `http`, kể cả khi người dùng vào bằng HTTPS.
+
+Vhost Python do CloudPanel sinh ra kiểm tra `$scheme` trực tiếp:
+
+```nginx
+if ($scheme != "https") {              # luôn đúng → lặp vô hạn
+  rewrite ^ https://$host$uri permanent;
+}
+```
+
+Kết quả: `ERR_TOO_MANY_REDIRECTS` từ Internet, trong khi `curl` trên chính
+server vẫn trả 200 — vì nó không đi qua proxy biên. Chính sự khác biệt đó là
+manh mối: client IP trong access log là IP của server chứ không phải của người
+dùng.
+
+Bản sửa dùng đúng mẫu của mọi site khác trên VPS:
+
+```nginx
+set $scheme_custom $scheme;
+if ($http_x_forwarded_proto = "https") {
+  set $scheme_custom "https";
+}
+if ($scheme_custom != "https") {
+  rewrite ^ https://$host$uri permanent;
+}
+```
+
+**Vì sao template PHP có mà template Python không.** Site PHP của CloudPanel
+chạy sau Varnish, nên template của nó vốn đã phải xử lý trường hợp giao thức bị
+che. Template Python giả định nginx là tầng ngoài cùng — đúng với cài đặt
+CloudPanel tiêu chuẩn, sai với hạ tầng có proxy biên như ở đây.
+
+**Rủi ro còn lại:** đoạn sửa này nằm ngoài template. Sửa site qua UI CloudPanel
+có thể ghi đè vhost và làm lỗi quay lại. Kiểm tra sau mỗi lần đụng UI.
+
+---
+
+## 9. Bài học: sự cố rsync khi dựng hệ thống
 
 Ghi lại vì nó định hình một ràng buộc trong script hiện tại.
 

@@ -1,0 +1,86 @@
+# BẢN THAM CHIẾU — không dùng để deploy.
+#
+# Đây là vhost đang chạy trên server, chụp lại ngày 2026-10-01 sau khi sửa tay.
+# File thật nằm ở /etc/nginx/sites-enabled/marhub.vaschools.edu.vn.conf và do
+# CloudPanel quản lý.
+#
+# Khác biệt duy nhất so với template Python mặc định của CloudPanel là đoạn
+# $scheme_custom bên dưới. Hạ tầng VAS có proxy biên terminate TLS rồi chuyển
+# tiếp bằng HTTP, nên $scheme luôn là "http"; kiểm tra nó trực tiếp sẽ gây
+# ERR_TOO_MANY_REDIRECTS. Template PHP/Node.js của CloudPanel có xử lý này,
+# template Python thì không.
+#
+# Sửa site qua UI CloudPanel có thể ghi đè vhost và làm lỗi quay lại. Khi đó,
+# đối chiếu với file này và áp lại đoạn $scheme_custom.
+#
+# Xem docs/07-ops/deployment-design.md §8
+
+server {
+  listen 80;
+  listen [::]:80;
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  ssl_certificate_key /etc/nginx/ssl-certificates/marhub.vaschools.edu.vn.key;
+  ssl_certificate /etc/nginx/ssl-certificates/marhub.vaschools.edu.vn.crt;
+  server_name marhub.vaschools.edu.vn;
+  root /home/vaschools-marhub/htdocs/marhub.vaschools.edu.vn;
+
+  access_log /home/vaschools-marhub/logs/nginx/access.log main;
+  error_log /home/vaschools-marhub/logs/nginx/error.log;
+
+  set $scheme_custom $scheme;
+  if ($http_x_forwarded_proto = "https") {
+    set $scheme_custom "https";
+  }
+  if ($scheme_custom != "https") {
+    rewrite ^ https://$host$uri permanent;
+  }
+
+  location ~ /.well-known {
+    auth_basic off;
+    allow all;
+  }
+
+  
+
+  index index.html;
+
+  location /uwsgi {
+    include uwsgi_params;
+    uwsgi_read_timeout 3600;
+    #uwsgi_pass unix:///run/uwsgi/app/weblate/socket;
+    uwsgi_pass 127.0.0.1:8090;
+  }
+
+  location / {
+    proxy_pass http://127.0.0.1:8090/;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass_request_headers on;
+    proxy_max_temp_file_size 0;
+    proxy_connect_timeout 900;
+    proxy_send_timeout 900;
+    proxy_read_timeout 900;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf)$ {
+    add_header Access-Control-Allow-Origin "*";
+    expires max;
+    access_log on;
+  }
+
+  if (-f $request_filename) {
+    break;
+  }
+}

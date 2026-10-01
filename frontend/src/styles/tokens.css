@@ -21,9 +21,9 @@
     --color-on-primary: #ffffff;
 
     /* Nền nhấn: pha với --color-surface để không bị chói trên nền xám */
-    --color-primary-soft: var(--color-primary-50);
-    --color-primary-soft-strong: var(--color-primary-100);
-    --color-primary-ring: color-mix(in srgb, var(--color-primary-600) 24%, transparent);
+    --color-primary-soft: var(--color-accent-soft);
+    --color-primary-soft-strong: var(--color-accent-soft-strong);
+    --color-primary-ring: var(--color-accent-ring);
 
     --color-danger: var(--color-primary-600);
     --color-danger-tint-bg: var(--color-primary-50);
@@ -33,11 +33,42 @@
     --color-gold-soft: #fbf3e4;
     --color-umber-700: #4c3626;
 
-    /* Phụ trợ cho biểu đồ/nhấn phi-brand (teal + indigo, tránh đụng crimson) */
-    --color-accent-teal: #0f766e;
-    --color-accent-teal-soft: #e5f6f3;
-    --color-accent-indigo: #4338ca;
-    --color-accent-indigo-soft: #eceafe;
+    /* ---------- Bảng màu nội dung (4 màu ngoài đỏ) ----------
+       Đỏ (crimson) chỉ dành cho sidebar. Mọi thứ khác pha từ 4 màu này:
+       teal, indigo, gold/umber, slate. Mỗi màu có 1 bậc đậm (chữ/viền),
+       1 bậc nhạt (nền) và 1 bậc giữa (gradient/thanh tỉ lệ). */
+    --c-teal-700: #0f766e;
+    --c-teal-500: #14b8a6;
+    --c-teal-100: #d5f2ed;
+    --c-teal-50: #effbf9;
+
+    --c-indigo-700: #4338ca;
+    --c-indigo-500: #6366f1;
+    --c-indigo-100: #e3e1fd;
+    --c-indigo-50: #f2f1fe;
+
+    --c-gold-700: #a1741f;
+    --c-gold-500: #c49c57;
+    --c-gold-100: #f6e9cf;
+    --c-gold-50: #fdf7eb;
+
+    --c-slate-700: #44506a;
+    --c-slate-500: #6b7894;
+    --c-slate-100: #e2e6ef;
+    --c-slate-50: #f2f4f9;
+
+    /* Bí danh giữ tương thích với CSS đã viết */
+    --color-accent-teal: var(--c-teal-700);
+    --color-accent-teal-soft: var(--c-teal-50);
+    --color-accent-indigo: var(--c-indigo-700);
+    --color-accent-indigo-soft: var(--c-indigo-50);
+
+    /* Màu nhấn chính cho NỘI DUNG (không phải sidebar) = indigo */
+    --color-accent: var(--c-indigo-700);
+    --color-accent-strong: #3730a3;
+    --color-accent-soft: var(--c-indigo-50);
+    --color-accent-soft-strong: var(--c-indigo-100);
+    --color-accent-ring: color-mix(in srgb, var(--c-indigo-500) 30%, transparent);
 
     /* ---------- Sidebar (khớp va-workspace theme.css) ---------- */
     --color-sidebar: var(--color-primary-900);
@@ -115,7 +146,7 @@
     --shadow-md: 0 2px 4px rgba(21, 23, 28, 0.04), 0 8px 20px rgba(21, 23, 28, 0.06);
     --shadow-lg: 0 8px 16px rgba(21, 23, 28, 0.06), 0 24px 48px rgba(21, 23, 28, 0.1);
     --shadow-card: 0 1px 2px rgba(21, 23, 28, 0.04), 0 6px 20px rgba(21, 23, 28, 0.05);
-    --shadow-card-hover: 0 2px 6px rgba(21, 23, 28, 0.06), 0 16px 36px rgba(133, 12, 54, 0.1);
+    --shadow-card-hover: 0 2px 6px rgba(21, 23, 28, 0.06), 0 16px 36px rgba(67, 56, 202, 0.1);
     --shadow-ring: 0 0 0 3px var(--color-primary-ring);
 
     --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -167,12 +198,12 @@ body {
     background-image:
         radial-gradient(
             60rem 30rem at 85% -10%,
-            color-mix(in srgb, var(--color-primary-200) 26%, transparent),
+            color-mix(in srgb, var(--c-indigo-100) 42%, transparent),
             transparent 70%
         ),
         radial-gradient(
             50rem 26rem at 0% 0%,
-            color-mix(in srgb, var(--color-accent-indigo-soft) 70%, transparent),
+            color-mix(in srgb, var(--c-teal-50) 85%, transparent),
             transparent 70%
         );
     background-attachment: fixed;

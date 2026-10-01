@@ -8,6 +8,7 @@ Script và file cấu hình triển khai `marhub.vaschools.edu.vn`.
 | `deploy.sh` | **Server** (`shared/deploy.sh`, cần sudo) | Giải nén, cài deps, migrate, đổi symlink, restart, health check |
 | `marhub-api.service` | Server (`/etc/systemd/system/`) | Unit chạy uvicorn 2 worker dưới user `vaschools-marhub` |
 | `marhub-api.logrotate` | Server (`/etc/logrotate.d/`) | Xoay `api.log` hàng ngày, giữ 14 bản |
+| `nginx-marhub.conf.reference` | — | Bản chụp vhost đang chạy. Tham chiếu khi CloudPanel ghi đè |
 
 ## Deploy
 

@@ -5,7 +5,7 @@
         var(--color-surface) 0%,
         color-mix(in srgb, var(--color-primary-soft) 55%, var(--color-surface)) 100%
     );
-    border-color: color-mix(in srgb, var(--color-primary-900) 12%, var(--color-border));
+    border-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-border));
 }
 
 .week1-panel__hint {
@@ -63,14 +63,14 @@
     gap: var(--space-2);
     font-size: 0.8125rem;
     color: var(--color-text-muted);
-    padding: 0.25rem 0.625rem;
-    border-radius: var(--radius-full);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
     background: var(--color-surface);
     border: 1px solid var(--color-border-subtle);
 }
 
 .week1-panel__sources strong {
-    color: var(--color-primary-900);
+    color: var(--color-accent);
     font-weight: 700;
 }
 
@@ -102,7 +102,7 @@
     margin: 0;
     font-weight: 700;
     font-size: 0.9375rem;
-    color: var(--color-primary-900);
+    color: var(--color-accent);
 }
 
 .week1-panel__serp-result {

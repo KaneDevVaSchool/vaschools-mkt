@@ -110,10 +110,10 @@
     margin: var(--space-4) auto 0;
     max-width: 22rem;
     padding: var(--space-3);
-    border: 1px solid color-mix(in srgb, var(--color-primary-600) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--sev-error) 30%, transparent);
     border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--color-primary-600) 8%, #ffffff);
-    color: var(--color-primary-800);
+    background: color-mix(in srgb, var(--sev-error) 8%, #ffffff);
+    color: var(--sev-error);
     font-size: 0.875rem;
     line-height: 1.5;
 }
@@ -132,7 +132,7 @@
     justify-content: center;
     padding: var(--space-2);
     border: 1px solid var(--login-border);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     background: var(--login-card-bg);
     box-shadow: var(--shadow-md);
     cursor: pointer;

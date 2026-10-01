@@ -11,7 +11,7 @@
 }
 
 .home__module-card--live {
-    border-color: color-mix(in srgb, var(--color-primary-900) 16%, var(--color-border));
+    border-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-border));
     background: linear-gradient(
         165deg,
         var(--color-surface) 0%,
@@ -43,20 +43,20 @@
     font-weight: 800;
     vertical-align: middle;
     background: var(--color-primary-soft-strong);
-    color: var(--color-primary-900);
+    color: var(--color-accent);
 }
 
 .home__module-badge {
     flex-shrink: 0;
-    padding: 0.25rem 0.625rem;
-    border-radius: var(--radius-full);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
     font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     background: var(--color-primary-soft-strong);
-    color: var(--color-primary-900);
-    border: 1px solid color-mix(in srgb, var(--color-primary-900) 15%, transparent);
+    color: var(--color-accent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
 }
 
 .home__module-badge--soon {
@@ -78,7 +78,7 @@
     padding-top: var(--space-2);
     font-size: 0.8125rem;
     font-weight: 700;
-    color: var(--color-primary-900);
+    color: var(--color-accent);
     text-decoration: none;
 }
 
