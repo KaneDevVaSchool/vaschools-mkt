@@ -1,0 +1,23 @@
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.status-pill--ok {
+    background: var(--prov-measured-bg);
+    color: var(--prov-measured);
+    border-color: color-mix(in srgb, var(--prov-measured) 25%, transparent);
+}
+
+.status-pill--bad {
+    background: var(--color-danger-tint-bg);
+    color: var(--color-danger-tint-fg);
+    border-color: color-mix(in srgb, var(--color-danger) 22%, transparent);
+}

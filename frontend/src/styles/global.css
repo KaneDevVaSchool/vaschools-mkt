@@ -1,0 +1,71 @@
+.centered-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: var(--space-6);
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: var(--space-4);
+}
+
+.surface-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-card);
+    transition:
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.surface-card h2,
+.surface-card h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.surface-card p {
+    margin: var(--space-2) 0 0;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+}
+
+.surface-card--muted {
+    opacity: 0.78;
+    box-shadow: var(--shadow-sm);
+}
+
+.surface-card--interactive:hover {
+    border-color: color-mix(in srgb, var(--color-primary-900) 18%, var(--color-border));
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+}
+
+.panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.panel__strip {
+    height: 3px;
+    background: linear-gradient(
+        90deg,
+        var(--color-primary-900),
+        var(--color-primary-600),
+        color-mix(in srgb, var(--color-gold) 70%, var(--color-primary-600))
+    );
+}

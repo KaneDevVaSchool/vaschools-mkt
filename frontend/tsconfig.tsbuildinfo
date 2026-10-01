@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/vite-env.d.ts","./src/api/client.ts","./src/api/useauth.ts","./src/components/applayout.tsx","./src/components/provenancebadge/provenancebadge.tsx","./src/features/auth/authcallback.tsx","./src/features/auth/login.tsx","./src/features/home/home.tsx","./src/routes/approutes.tsx","./src/routes/requireauth.tsx"],"version":"5.9.3"}

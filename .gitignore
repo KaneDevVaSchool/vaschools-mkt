@@ -1,0 +1,29 @@
+# Bí mật — không bao giờ commit
+.env
+.env.local
+.env.production
+*-credentials.json
+secrets/
+
+# Log chi phí SERP local (tuần 1)
+backend/data/serp_cost_log.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

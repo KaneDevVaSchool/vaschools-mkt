@@ -1,0 +1,51 @@
+.goal-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.goal-progress__row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: 0.8125rem;
+}
+
+.goal-progress__label {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.goal-progress__nums {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.goal-progress__track {
+    height: 0.625rem;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-border) 35%, var(--color-surface-muted));
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(20, 20, 24, 0.06);
+}
+
+.goal-progress__track--done .goal-progress__fill {
+    background: linear-gradient(
+        90deg,
+        var(--prov-measured),
+        color-mix(in srgb, var(--prov-measured) 75%, #22c55e)
+    );
+}
+
+.goal-progress__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        var(--color-primary-900),
+        var(--color-primary-600)
+    );
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-600) 35%, transparent);
+}

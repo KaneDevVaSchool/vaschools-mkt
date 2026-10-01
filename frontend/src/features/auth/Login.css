@@ -1,0 +1,171 @@
+/* Port y nguyên từ va-workspace Login.vue (<style scoped>). */
+
+.login {
+    /* Trang login luôn có giao diện sáng cố định (không đổi theo dark mode
+       hệ thống). Khai báo token riêng ở đây thay vì dùng thẳng
+       --color-text/--color-surface, để card trắng không bị chữ/nút tối
+       màu-trên-tối nếu sau này thêm dark mode. */
+    --login-card-bg: #ffffff;
+    --login-text: #1a1a1a;
+    --login-text-muted: #6b6b6f;
+    --login-border: #e5e5e8;
+
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5) var(--space-4);
+    background: var(--color-primary-900);
+}
+
+/* Watermark: PNG tối trên nền trong suốt → invert thành họa tiết sáng mờ
+   trên nền brand. Độ mờ đến từ chính ảnh nguồn, không giảm thêm opacity. */
+.login__watermark {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.05);
+    filter: brightness(0) invert(1) contrast(1.5);
+    pointer-events: none;
+}
+
+.login__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-primary-900) 5%, transparent),
+        transparent,
+        color-mix(in srgb, var(--color-primary-900) 20%, transparent)
+    );
+    pointer-events: none;
+}
+
+.login__container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 28rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login__header {
+    margin-bottom: var(--space-6);
+    padding: 0 var(--space-4);
+}
+
+.login__logo {
+    display: block;
+    width: 100%;
+    max-width: min(100%, 300px);
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(var(--shadow-sm));
+}
+
+.login__system-name {
+    margin: var(--space-4) 0 0;
+    text-align: center;
+    color: #ffffff;
+    font-size: clamp(0.8125rem, 2.5vw, 1.0625rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    white-space: nowrap;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+
+.login__card {
+    width: 100%;
+    background: var(--login-card-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6) var(--space-5);
+    text-align: center;
+}
+
+.login__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--login-text);
+}
+
+.login__subtitle {
+    margin: var(--space-3) auto 0;
+    max-width: 20rem;
+    color: var(--login-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.login__error {
+    margin: var(--space-4) auto 0;
+    max-width: 22rem;
+    padding: var(--space-3);
+    border: 1px solid color-mix(in srgb, var(--color-primary-600) 30%, transparent);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-primary-600) 8%, #ffffff);
+    color: var(--color-primary-800);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.login__actions {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.login__google-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    border: 1px solid var(--login-border);
+    border-radius: var(--radius-full);
+    background: var(--login-card-bg);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+}
+
+.login__google-btn:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.login__google-icon {
+    display: block;
+    width: 2.25rem;
+    height: 2.25rem;
+}
+
+@media (max-width: 480px) {
+    .login__card {
+        padding: var(--space-5) var(--space-4);
+    }
+
+    .login__logo {
+        max-width: 240px;
+    }
+
+    .login__system-name {
+        font-size: 0.75rem;
+        letter-spacing: 0;
+    }
+}
+
+@media (min-width: 768px) {
+    .login__logo {
+        max-width: 320px;
+    }
+}

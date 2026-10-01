@@ -1,0 +1,104 @@
+# Bộ seed tuần 1 — xem docs/03-data/seed-keywords.md
+defaults:
+  location: VN
+  language: vi
+
+blocklist_substrings:
+  - tuyển dụng
+  - tuyen dung
+  - việc làm
+  - viec lam
+  - lương giáo viên
+  - luong giao vien
+  - tải tài liệu
+  - tai tai lieu
+
+manual_seeds:
+  - trường quốc tế tphcm
+  - truong quoc te tphcm
+  - học phí trường quốc tế
+  - hoc phi truong quoc te
+  - tuyển sinh lớp 1
+  - trường song ngữ tiểu học
+  - trường ib tphcm
+  - chương trình cambridge
+  - international school hcmc
+  - bilingual school vietnam
+  - vaschools
+  - va schools
+  - vietnam australia international school
+  - trường quốc tế việt úc
+  - truong quoc te viet uc
+  - trường mầm non quốc tế
+  - trường thcs quốc tế
+  - trường thpt quốc tế
+
+dimensions:
+  school_types:
+    - trường quốc tế
+    - trường song ngữ
+    - trường tư thục
+    - trường dân lập
+    - trường nội trú
+    - trường bán trú
+    - trường chất lượng cao
+  levels:
+    - mầm non
+    - tiểu học
+    - thcs
+    - thpt
+    - lớp 1
+    - lớp 6
+    - lớp 10
+  programs:
+    - chương trình ib
+    - chương trình cambridge
+    - chương trình igcse
+    - chương trình a-level
+    - chương trình mỹ
+    - chương trình anh
+  locations:
+    - tphcm
+    - hồ chí minh
+    - quận 2
+    - quận 7
+    - thủ đức
+    - bình thạnh
+    - hà nội
+    - đà nẵng
+  parent_intents:
+    - học phí
+    - bảng học phí
+    - học bổng
+    - tuyển sinh
+    - điều kiện tuyển sinh
+    - cơ sở vật chất
+    - đánh giá
+    - so sánh
+    - xe đưa đón
+    - bán trú
+
+combination_templates:
+  - "{school_types} {locations}"
+  - "{school_types} {levels}"
+  - "{parent_intents} {school_types}"
+  - "{parent_intents} {school_types} {locations}"
+  - "{programs} {locations}"
+  - "{levels} {locations}"
+
+suggest_prefixes:
+  - trường quốc tế
+  - trường song ngữ
+  - học phí trường
+  - tuyển sinh trường
+  - trường ib
+  - trường mầm non
+  - trường thpt
+  - trường tiểu học
+  - nhà trẻ
+  - mẫu giáo
+  - international school
+  - bilingual school
+  - british school saigon
+  - học bổng trường
+  - review trường quốc tế

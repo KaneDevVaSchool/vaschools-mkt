@@ -1,0 +1,30 @@
+{
+  "provider_payload_version": 1,
+  "related_searches": [
+    { "query": "trường quốc tế tphcm học phí" },
+    { "query": "trường song ngữ quốc tế" }
+  ],
+  "related_questions": [
+    { "question": "Trường quốc tế nào tốt ở TP.HCM?" }
+  ],
+  "parsed": {
+    "results_count": 1250000,
+    "features": ["people_also_ask", "local_pack"],
+    "results": [
+      {
+        "position": 1,
+        "url": "https://vaschools.edu.vn/",
+        "domain": "vaschools.edu.vn",
+        "title": "VA Schools — Trường Quốc Tế",
+        "description": "Hệ thống trường quốc tế tại TP.HCM."
+      },
+      {
+        "position": 2,
+        "url": "https://example-competitor.edu.vn/",
+        "domain": "example-competitor.edu.vn",
+        "title": "Trường quốc tế tại TP.HCM",
+        "description": "Chương trình song ngữ và IB."
+      }
+    ]
+  }
+}

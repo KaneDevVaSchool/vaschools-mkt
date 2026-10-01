@@ -1,0 +1,30 @@
+.prov-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.prov-badge--measured {
+    color: var(--prov-measured);
+    background: var(--prov-measured-bg);
+}
+
+.prov-badge--observed {
+    color: var(--prov-observed);
+    background: var(--prov-observed-bg);
+}
+
+.prov-badge--vendor {
+    color: var(--prov-vendor);
+    background: var(--prov-vendor-bg);
+}
+
+.prov-badge--estimated {
+    color: var(--prov-estimated);
+    background: var(--prov-estimated-bg);
+}

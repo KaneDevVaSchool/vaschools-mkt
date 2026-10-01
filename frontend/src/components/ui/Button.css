@@ -1,0 +1,94 @@
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+}
+
+.ui-btn--md {
+    padding: 0.5625rem var(--space-4);
+    font-size: 0.8125rem;
+}
+
+.ui-btn--sm {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+}
+
+.ui-btn--primary {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-primary-800) 90%, white) 0%,
+        var(--color-primary-900) 100%
+    );
+    border-color: var(--color-primary-900);
+    color: var(--color-on-primary);
+    box-shadow: 0 1px 2px rgba(154, 0, 54, 0.25);
+}
+
+.ui-btn--primary:hover:not(:disabled) {
+    background: linear-gradient(
+        180deg,
+        var(--color-primary-700) 0%,
+        var(--color-primary-800) 100%
+    );
+    box-shadow: 0 4px 12px rgba(154, 0, 54, 0.28);
+    transform: translateY(-1px);
+}
+
+.ui-btn--secondary {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+    box-shadow: var(--shadow-sm);
+}
+
+.ui-btn--secondary:hover:not(:disabled) {
+    background: var(--color-surface-muted);
+    border-color: color-mix(in srgb, var(--color-primary-900) 22%, var(--color-border));
+    color: var(--color-primary-900);
+}
+
+.ui-btn--ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-text-muted);
+}
+
+.ui-btn--ghost:hover:not(:disabled) {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-900);
+}
+
+.ui-btn--danger {
+    background: var(--color-danger-tint-bg);
+    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+    color: var(--color-danger-tint-fg);
+}
+
+.ui-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.ui-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+a.ui-btn {
+    text-decoration: none;
+}

@@ -1,0 +1,50 @@
+# Tuần 1: db + redis + api. worker/beat thêm ở tuần 2 (pipeline batch).
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vaschools_mkt
+    ports:
+      # 5433 tránh xung đột Postgres local (ServBay, v.v.) trên 5432
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vaschools_mkt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    command: uvicorn vaschools_mkt.api.main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/vaschools_mkt
+      REDIS_URL: redis://redis:6379/0
+      SERP_PROVIDER: ${SERP_PROVIDER:-fake}
+      SERP_API_KEY: ${SERP_API_KEY:-}
+      SERP_DEFAULT_LOCATION: ${SERP_DEFAULT_LOCATION:-VN}
+      SERP_DEFAULT_LANGUAGE: ${SERP_DEFAULT_LANGUAGE:-vi}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
