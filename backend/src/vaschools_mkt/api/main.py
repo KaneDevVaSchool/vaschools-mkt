@@ -5,10 +5,14 @@ docs/01-architecture/api-conventions.md.
 """
 
 import logging
+import os
+from pathlib import Path
 
 import redis.asyncio as redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -102,3 +106,45 @@ async def _startup() -> None:
     if settings.is_production and settings.secret_key.startswith("dev-only"):
         raise RuntimeError("SECRET_KEY mặc định không được dùng ở production")
     log.info("Khởi động %s (%s)", settings.app_name, settings.environment)
+
+
+# --- SPA tĩnh ---
+# Production: SPA build nằm cạnh backend và được serve cùng origin với API,
+# nên không cần CORS và cookie session đi thẳng. Mount sau cùng để các router
+# /api, /auth, /health giữ quyền ưu tiên.
+# Dev: thư mục không tồn tại, bỏ qua — SPA chạy ở vite dev server.
+def _find_spa_dir() -> Path:
+    """Thư mục SPA build. SPA_DIR trong env thắng; nếu không, dò ngược lên cây.
+
+    Local là <repo>/frontend/dist, production là <release>/static — dò thay vì
+    hardcode độ sâu để không vỡ khi layout đổi.
+    """
+    if env_dir := os.getenv("SPA_DIR"):
+        return Path(env_dir).resolve()
+    here = Path(__file__).resolve()
+    for parent in here.parents[:6]:
+        for candidate in (parent / "static", parent / "frontend" / "dist"):
+            if (candidate / "index.html").is_file():
+                return candidate
+    return here.parents[3] / "static"
+
+
+_SPA_DIR = _find_spa_dir()
+
+if (_SPA_DIR / "index.html").is_file():
+    app.mount("/assets", StaticFiles(directory=_SPA_DIR / "assets"), name="spa-assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        """Client-side routing: mọi path không khớp router đều trả index.html.
+
+        Trừ file tĩnh có thật ở gốc build (favicon, robots.txt, ...).
+        """
+        candidate = (_SPA_DIR / full_path).resolve()
+        if full_path and candidate.is_file() and candidate.is_relative_to(_SPA_DIR):
+            return FileResponse(candidate)
+        return FileResponse(_SPA_DIR / "index.html")
+
+    log.info("SPA được serve từ %s", _SPA_DIR)
+else:
+    log.info("Không tìm thấy SPA build tại %s — chỉ serve API", _SPA_DIR)

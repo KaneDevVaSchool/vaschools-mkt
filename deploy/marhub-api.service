@@ -1,0 +1,33 @@
+[Unit]
+Description=VA Schools Marketing Intelligence API (marhub)
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=vaschools-marhub
+Group=vaschools-marhub
+WorkingDirectory=/home/vaschools-marhub/htdocs/marhub.vaschools.edu.vn/current/backend
+EnvironmentFile=/home/vaschools-marhub/htdocs/marhub.vaschools.edu.vn/shared/.env
+ExecStart=/home/vaschools-marhub/htdocs/marhub.vaschools.edu.vn/shared/venv/bin/uvicorn \
+    vaschools_mkt.api.main:app \
+    --host 127.0.0.1 --port 8090 \
+    --workers 2 \
+    --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+# Siết quyền: service chỉ cần ghi vào thư mục của chính site.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/vaschools-marhub/logs /home/vaschools-marhub/tmp
+
+StandardOutput=append:/home/vaschools-marhub/logs/api.log
+StandardError=append:/home/vaschools-marhub/logs/api-error.log
+
+[Install]
+WantedBy=multi-user.target
