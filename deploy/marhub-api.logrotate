@@ -1,0 +1,17 @@
+# Log của uvicorn ghi append qua systemd StandardOutput/StandardError.
+# Không có logrotate thì api.log phình vô hạn và lấp đầy ổ đĩa.
+#
+# copytruncate: uvicorn giữ file descriptor mở, không hiểu tín hiệu reopen,
+# nên phải cắt tại chỗ thay vì đổi tên file.
+/home/vaschools-marhub/logs/api.log
+/home/vaschools-marhub/logs/api-error.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su vaschools-marhub vaschools-marhub
+    create 0640 vaschools-marhub vaschools-marhub
+}

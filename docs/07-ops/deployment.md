@@ -1,4 +1,16 @@
-# Triển khai
+# Triển khai (thiết kế gốc — Docker Compose)
+
+> **Trạng thái:** tài liệu này mô tả kiến trúc Docker Compose dự kiến từ giai
+> đoạn thiết kế, và vẫn đúng cho **môi trường phát triển cục bộ**.
+>
+> **Production không dùng Docker.** Hệ thống chạy thật trên CloudPanel +
+> systemd. Khi hai tài liệu mâu thuẫn, bộ tài liệu dưới đây mô tả thực tế:
+>
+> | Tài liệu | Nội dung |
+> |---|---|
+> | [infrastructure-spec.md](infrastructure-spec.md) | Hạ tầng production có những gì |
+> | [deployment-design.md](deployment-design.md) | Thiết kế và lý do chọn |
+> | [deployment-runbook.md](deployment-runbook.md) | Thao tác từng bước |
 
 ## Thành phần
 

@@ -1,24 +1,43 @@
-/* Design token — nguồn sự thật cho màu/spacing/font.
-   Màu brand port từ va-workspace/resources/css/theme.css. */
+/* Design token — nguồn sự thật cho màu/spacing/font/animation.
+   Màu brand port từ va-workspace/resources/css/theme.css, làm dịu lại:
+   crimson chỉ dùng cho nhấn nhỏ, nền/viền dùng thang slate trung tính. */
 
 :root {
-    /* ---------- Brand ---------- */
-    --color-primary-600: #ff0043;
-    --color-primary-700: #da003f;
-    --color-primary-800: #b6003a;
-    --color-primary-900: #9a0036;
+    /* ---------- Brand ----------
+       Thang crimson đủ bậc để không phải color-mix tại chỗ.
+       400–500 dùng cho nhấn/gradient, 800–900 cho chữ trên nền sáng. */
+    --color-primary-50: #fff1f4;
+    --color-primary-100: #ffe0e7;
+    --color-primary-200: #ffc5d2;
+    --color-primary-300: #ff9cb1;
+    --color-primary-400: #ff5c80;
+    --color-primary-500: #f82b5d;
+    --color-primary-600: #e00f49;
+    --color-primary-700: #bd073f;
+    --color-primary-800: #9e0a3b;
+    --color-primary-900: #850c36;
+    --color-primary-950: #4b0119;
     --color-primary-hover: var(--color-primary-700);
     --color-on-primary: #ffffff;
-    --color-primary-soft: color-mix(in srgb, var(--color-primary-900) 9%, #ffffff);
-    --color-primary-soft-strong: color-mix(in srgb, var(--color-primary-900) 14%, #ffffff);
-    --color-primary-ring: color-mix(in srgb, var(--color-primary-900) 28%, transparent);
+
+    /* Nền nhấn: pha với --color-surface để không bị chói trên nền xám */
+    --color-primary-soft: var(--color-primary-50);
+    --color-primary-soft-strong: var(--color-primary-100);
+    --color-primary-ring: color-mix(in srgb, var(--color-primary-600) 24%, transparent);
 
     --color-danger: var(--color-primary-600);
-    --color-danger-tint-bg: #fdecec;
-    --color-danger-tint-fg: #9a0036;
+    --color-danger-tint-bg: var(--color-primary-50);
+    --color-danger-tint-fg: var(--color-primary-800);
 
     --color-gold: #c49c57;
+    --color-gold-soft: #fbf3e4;
     --color-umber-700: #4c3626;
+
+    /* Phụ trợ cho biểu đồ/nhấn phi-brand (teal + indigo, tránh đụng crimson) */
+    --color-accent-teal: #0f766e;
+    --color-accent-teal-soft: #e5f6f3;
+    --color-accent-indigo: #4338ca;
+    --color-accent-indigo-soft: #eceafe;
 
     /* ---------- Sidebar (khớp va-workspace theme.css) ---------- */
     --color-sidebar: var(--color-primary-900);
@@ -45,16 +64,20 @@
     --spacing-sidebar-expanded: 17rem;
     --spacing-sidebar-drawer: 17rem;
 
-    /* ---------- Nền / chữ ---------- */
-    --color-bg: #eef0f4;
-    --color-bg-accent: #e8eaef;
+    /* ---------- Nền / chữ ----------
+       Thang slate hơi lạnh, 4 bậc nền để xếp lớp panel trên page trên shell. */
+    --color-bg: #f1f3f7;
+    --color-bg-accent: #e7eaf1;
     --color-surface: #ffffff;
-    --color-surface-muted: #f4f5f7;
+    --color-surface-muted: #f7f8fb;
+    --color-surface-sunken: #eff1f6;
     --color-surface-elevated: #ffffff;
-    --color-text: #141418;
-    --color-text-muted: #64646e;
-    --color-border: #e2e4ea;
-    --color-border-subtle: color-mix(in srgb, var(--color-border) 65%, transparent);
+    --color-text: #15171c;
+    --color-text-muted: #666d7d;
+    --color-text-subtle: #8b92a1;
+    --color-border: #dfe3ec;
+    --color-border-strong: #c7cdda;
+    --color-border-subtle: color-mix(in srgb, var(--color-border) 62%, transparent);
 
     /* ---------- Nhãn nguồn dữ liệu ---------- */
     --prov-measured: #15803d;
@@ -78,20 +101,36 @@
     --space-6: 2rem;
     --space-7: 3rem;
 
+    /* Bo góc vuông mềm — không dùng dạng viên thuốc (pill) ở bất kỳ đâu.
+       --radius-full giữ lại CHỈ cho hình tròn thật (avatar, dot, spinner). */
+    --radius-xs: 0.25rem;
     --radius-sm: 0.375rem;
-    --radius-md: 0.625rem;
-    --radius-lg: 0.875rem;
-    --radius-xl: 1.125rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
     --radius-full: 9999px;
 
-    --shadow-sm: 0 1px 2px rgba(20, 20, 24, 0.05);
-    --shadow-md: 0 4px 16px rgba(20, 20, 24, 0.07);
-    --shadow-lg: 0 16px 40px rgba(20, 20, 24, 0.1);
-    --shadow-card: 0 1px 2px rgba(20, 20, 24, 0.04), 0 8px 24px rgba(154, 0, 54, 0.04);
-    --shadow-card-hover: 0 4px 12px rgba(20, 20, 24, 0.06), 0 12px 32px rgba(154, 0, 54, 0.07);
+    --shadow-sm: 0 1px 2px rgba(21, 23, 28, 0.05);
+    --shadow-md: 0 2px 4px rgba(21, 23, 28, 0.04), 0 8px 20px rgba(21, 23, 28, 0.06);
+    --shadow-lg: 0 8px 16px rgba(21, 23, 28, 0.06), 0 24px 48px rgba(21, 23, 28, 0.1);
+    --shadow-card: 0 1px 2px rgba(21, 23, 28, 0.04), 0 6px 20px rgba(21, 23, 28, 0.05);
+    --shadow-card-hover: 0 2px 6px rgba(21, 23, 28, 0.06), 0 16px 36px rgba(133, 12, 54, 0.1);
+    --shadow-ring: 0 0 0 3px var(--color-primary-ring);
 
     --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
         sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+    /* ---------- Animation ----------
+       Một thang easing/thời lượng dùng chung để chuyển động cả app đồng nhất. */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur-fast: 120ms;
+    --dur-base: 200ms;
+    --dur-slow: 340ms;
+    --dur-slower: 560ms;
 
     --content-max-wide: 72rem;
     --content-max: 56rem;
@@ -123,7 +162,110 @@ body {
     margin: 0;
     font-family: var(--font-sans);
     color: var(--color-text);
-    background: var(--color-bg);
+    /* Nền xếp lớp: hai vệt sáng rất nhạt thay cho màu phẳng */
+    background-color: var(--color-bg);
+    background-image:
+        radial-gradient(
+            60rem 30rem at 85% -10%,
+            color-mix(in srgb, var(--color-primary-200) 26%, transparent),
+            transparent 70%
+        ),
+        radial-gradient(
+            50rem 26rem at 0% 0%,
+            color-mix(in srgb, var(--color-accent-indigo-soft) 70%, transparent),
+            transparent 70%
+        );
+    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Keyframe dùng chung ---------- */
+
+@keyframes fade-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pop-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes grow-x {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse-soft {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
+}
+
+/* Vệt sáng chạy ngang — dùng cho thanh tiến độ và skeleton */
+@keyframes sheen-sweep {
+    0% {
+        transform: translateX(-120%);
+    }
+    100% {
+        transform: translateX(260%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

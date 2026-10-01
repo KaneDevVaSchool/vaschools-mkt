@@ -6,6 +6,7 @@
     padding: var(--space-6);
     color: var(--color-text-muted);
     font-size: 0.9375rem;
+    animation: fade-in var(--dur-slow) var(--ease-out);
 }
 
 .card-grid {
@@ -21,9 +22,9 @@
     padding: var(--space-5);
     box-shadow: var(--shadow-card);
     transition:
-        box-shadow 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
+        box-shadow var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out),
+        transform var(--dur-base) var(--ease-out);
 }
 
 .surface-card h2,
@@ -47,25 +48,56 @@
 }
 
 .surface-card--interactive:hover {
-    border-color: color-mix(in srgb, var(--color-primary-900) 18%, var(--color-border));
+    border-color: color-mix(in srgb, var(--color-primary-600) 22%, var(--color-border));
     box-shadow: var(--shadow-card-hover);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 .panel {
+    position: relative;
     background: var(--color-surface);
     border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-2xl);
     box-shadow: var(--shadow-card);
     overflow: hidden;
+    animation: fade-rise var(--dur-slow) var(--ease-out) both;
 }
 
+/* Vạch nhấn trên đầu panel — gradient brand, có vệt sáng chạy qua một lần khi mount */
 .panel__strip {
+    position: relative;
     height: 3px;
+    overflow: hidden;
     background: linear-gradient(
         90deg,
-        var(--color-primary-900),
-        var(--color-primary-600),
-        color-mix(in srgb, var(--color-gold) 70%, var(--color-primary-600))
+        var(--color-primary-800) 0%,
+        var(--color-primary-500) 45%,
+        var(--color-gold) 100%
     );
+}
+
+.panel__strip::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 28%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.85),
+        transparent
+    );
+    animation: sheen-sweep 1.6s var(--ease-in-out) 0.25s both;
+}
+
+/* ---------- Tiện ích chuyển động ----------
+   Dùng cho phần tử vào màn hình theo thứ tự; đặt --stagger-i để lệch pha. */
+.anim-rise {
+    animation: fade-rise var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--stagger-i, 0) * 45ms);
+}
+
+.anim-pop {
+    animation: pop-in var(--dur-base) var(--ease-spring) both;
+    animation-delay: calc(var(--stagger-i, 0) * 40ms);
 }

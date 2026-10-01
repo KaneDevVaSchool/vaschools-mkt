@@ -90,7 +90,10 @@ tài liệu gốc.
 ### 07-ops — Vận hành
 | File | Nội dung |
 |---|---|
-| [07-ops/deployment.md](07-ops/deployment.md) | Docker, môi trường, biến cấu hình |
+| [07-ops/infrastructure-spec.md](07-ops/infrastructure-spec.md) | **Đặc tả hạ tầng production** — máy chủ, cổng, đường dẫn, dịch vụ |
+| [07-ops/deployment-design.md](07-ops/deployment-design.md) | **Thiết kế triển khai** — kiến trúc và lý do chọn |
+| [07-ops/deployment-runbook.md](07-ops/deployment-runbook.md) | **Runbook** — setup, deploy, rollback, xử lý sự cố |
+| [07-ops/deployment.md](07-ops/deployment.md) | Thiết kế gốc Docker Compose (dùng cho dev cục bộ) |
 | [07-ops/scheduling-and-quota.md](07-ops/scheduling-and-quota.md) | Lịch crawl, trần chi phí |
 | [07-ops/monitoring.md](07-ops/monitoring.md) | Log, cảnh báo, theo dõi quota |
 
