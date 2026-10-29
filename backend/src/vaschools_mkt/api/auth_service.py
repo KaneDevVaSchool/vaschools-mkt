@@ -55,9 +55,13 @@ def authenticate(claims: dict[str, Any]) -> User:
 
 def sanitize_redirect(redirect: str | None) -> str | None:
     """Chỉ cho phép quay về path nội bộ (SPA), chặn open-redirect."""
-    if not isinstance(redirect, str) or not redirect.startswith("/"):
+    if not isinstance(redirect, str):
         return None
-    # Chặn protocol-relative ("//evil.com") giả dạng path nội bộ.
-    if redirect.startswith("//"):
+    value = redirect.strip()
+    if not value.startswith("/") or value.startswith("//"):
         return None
-    return redirect
+    # Chặn scheme/host giả trong path (open redirect).
+    lower = value.lower()
+    if lower.startswith("/\\") or "://" in value.split("?", 1)[0]:
+        return None
+    return value

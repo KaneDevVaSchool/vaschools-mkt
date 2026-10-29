@@ -10,11 +10,14 @@
  */
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { startGoogleLogin } from "@/api/client";
 import "./Login.css";
 
+type LoginLocationState = { redirectTo?: string };
+
 export default function Login() {
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const [error, setError] = useState<string | null>(null);
 
@@ -30,8 +33,20 @@ export default function Login() {
         setSearchParams(rest, { replace: true });
     }, [searchParams, setSearchParams]);
 
+    function postLoginRedirect(): string | null {
+        const fromState = (location.state as LoginLocationState | null)?.redirectTo;
+        if (fromState?.startsWith("/") && !fromState.startsWith("//")) {
+            return fromState;
+        }
+        const fromQuery = searchParams.get("redirect");
+        if (fromQuery?.startsWith("/") && !fromQuery.startsWith("//")) {
+            return fromQuery;
+        }
+        return null;
+    }
+
     function handleLogin() {
-        startGoogleLogin(searchParams.get("redirect"));
+        startGoogleLogin(postLoginRedirect());
     }
 
     return (

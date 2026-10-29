@@ -3,7 +3,12 @@
  * Xem docs/01-architecture/api-conventions.md.
  */
 
-export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+/** Rỗng = cùng origin (Vite proxy hoặc SPA prod cùng cổng API). */
+export const API_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+
+function apiOrigin(): string {
+    return API_URL || window.location.origin;
+}
 
 /** Lỗi trả về từ API, đã có message tiếng Việt sẵn cho người dùng. */
 export class ApiError extends Error {
@@ -56,8 +61,9 @@ export async function apiFetch<T>(
 
 /** Điều hướng full-page sang OAuth — không dùng fetch vì đây là redirect thật. */
 export function startGoogleLogin(redirect?: string | null): void {
+    const base = `${apiOrigin()}/auth/google/redirect`;
     const url = redirect
-        ? `${API_URL}/auth/google/redirect?redirect=${encodeURIComponent(redirect)}`
-        : `${API_URL}/auth/google/redirect`;
+        ? `${base}?redirect=${encodeURIComponent(redirect)}`
+        : base;
     window.location.href = url;
 }

@@ -8,31 +8,61 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { authKeys } from "@/api/useAuth";
+import { authKeys, useMe } from "@/api/useAuth";
+import { apiFetch } from "@/api/client";
+import type { SessionUser } from "@/api/useAuth";
+import { parseInternalRedirect } from "@/lib/redirectUtils";
 
 export default function AuthCallback() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const qc = useQueryClient();
+    const { refetch } = useMe();
 
     useEffect(() => {
-        const status = searchParams.get("status");
-        const redirect = searchParams.get("redirect");
+        let cancelled = false;
 
-        if (status !== "ok") {
-            navigate("/login?error=Đăng nhập không thành công.", { replace: true });
-            return;
+        async function finish() {
+            const status = searchParams.get("status");
+            const redirect = searchParams.get("redirect");
+
+            if (status !== "ok") {
+                navigate("/login?error=Đăng nhập không thành công.", { replace: true });
+                return;
+            }
+
+            // Buộc nạp lại session trước khi vào route guard — tránh vòng /login.
+            let user: SessionUser | null | undefined;
+            try {
+                const res = await apiFetch<{ data: SessionUser }>("/auth/me");
+                user = res.data;
+                qc.setQueryData(authKeys.me, user);
+            } catch {
+                const refreshed = await refetch();
+                user = refreshed.data;
+            }
+
+            if (cancelled) return;
+
+            if (!user) {
+                const params = new URLSearchParams({
+                    error: "Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.",
+                });
+                if (redirect?.startsWith("/") && !redirect.startsWith("//")) {
+                    params.set("redirect", redirect);
+                }
+                navigate(`/login?${params.toString()}`, { replace: true });
+                return;
+            }
+
+            navigate(parseInternalRedirect(redirect), { replace: true });
         }
 
-        // Buộc nạp lại /auth/me trước khi vào trang trong — nếu không, route
-        // guard sẽ đọc cache cũ (chưa đăng nhập) và đá ngược về /login.
-        qc.invalidateQueries({ queryKey: authKeys.me }).then(() => {
-            const target = redirect?.startsWith("/") && !redirect.startsWith("//")
-                ? redirect
-                : "/";
-            navigate(target, { replace: true });
-        });
-    }, [searchParams, navigate, qc]);
+        void finish();
+        return () => {
+            cancelled = true;
+        };
+    }, [searchParams, navigate, qc, refetch]);
 
     return (
         <div className="centered-state">

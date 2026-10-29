@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     app_name: str = "VA Schools — Marketing Intelligence"
     # URL của frontend (SPA). OAuth callback redirect về đây.
-    frontend_url: str = "http://localhost:5173"
+    # Để trống → dùng backend_url (SPA build serve cùng cổng API, ví dụ :8000).
+    frontend_url: str = ""
     # URL của chính backend này. Dùng để dựng redirect_uri gửi sang Google.
     backend_url: str = "http://localhost:8000"
 
@@ -71,6 +72,20 @@ class Settings(BaseSettings):
     @property
     def google_configured(self) -> bool:
         return bool(self.google_client_id) and bool(self.google_client_secret)
+
+    @property
+    def public_app_url(self) -> str:
+        """Origin nơi SPA chạy — nơi OAuth redirect người dùng về sau callback."""
+        return (self.frontend_url or self.backend_url).rstrip("/")
+
+    @property
+    def cors_origins(self) -> list[str]:
+        origins = {self.public_app_url}
+        if not self.is_production:
+            origins.add(self.backend_url.rstrip("/"))
+            if self.frontend_url:
+                origins.add(self.frontend_url.rstrip("/"))
+        return sorted(origins)
 
     @property
     def google_redirect_uri(self) -> str:

@@ -20,8 +20,17 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
     }
 
     if (!user) {
-        const redirect = encodeURIComponent(location.pathname + location.search);
-        return <Navigate to={`/login?redirect=${redirect}`} replace />;
+        const redirectTo = location.pathname + location.search;
+        return (
+            <Navigate
+                to={{
+                    pathname: "/login",
+                    search: `?redirect=${encodeURIComponent(redirectTo)}`,
+                }}
+                state={{ redirectTo }}
+                replace
+            />
+        );
     }
 
     return <>{children}</>;

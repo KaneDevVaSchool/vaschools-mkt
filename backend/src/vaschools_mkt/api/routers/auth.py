@@ -34,8 +34,13 @@ SESSION_REDIRECT_KEY = "login.redirect"
 
 def _frontend_url(path: str, **query: str | None) -> str:
     q = {k: v for k, v in query.items() if v}
-    base = f"{settings.frontend_url}{path}"
+    base = f"{settings.public_app_url}{path}"
     return f"{base}?{urlencode(q)}" if q else base
+
+
+def _frontend_path(internal: str) -> str:
+    """Path nội bộ SPA (có thể kèm ?query) → URL tuyệt đối."""
+    return f"{settings.public_app_url}{internal}"
 
 
 def _fail_login(message: str) -> RedirectResponse:
@@ -48,13 +53,15 @@ async def google_redirect(request: Request):
     if not settings.google_configured:
         return _fail_login("Đăng nhập Google chưa được cấu hình trên máy chủ.")
 
-    # Đã đăng nhập rồi → về thẳng trang chủ, không chạy lại OAuth.
+    post_login = auth_service.sanitize_redirect(request.query_params.get("redirect"))
+
+    # Đã đăng nhập rồi → về đích (nếu có), không chạy lại OAuth.
     if request.session.get(SESSION_USER_KEY):
+        if post_login:
+            return RedirectResponse(_frontend_path(post_login))
         return RedirectResponse(_frontend_url("/"))
 
-    request.session[SESSION_REDIRECT_KEY] = auth_service.sanitize_redirect(
-        request.query_params.get("redirect")
-    )
+    request.session[SESSION_REDIRECT_KEY] = post_login
 
     domains = settings.allowed_domains
     return await oauth.google.authorize_redirect(
