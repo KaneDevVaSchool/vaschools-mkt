@@ -9,6 +9,13 @@ import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import GoalProgress from "@/components/ui/GoalProgress";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import {
+    KEYWORD_SOURCES,
+    TRUSTED_SOURCE_IDS,
+    keywordSourceDef,
+    trustLabel,
+} from "@/lib/keywordSources";
+import KeywordSourceTag from "@/features/keywords/KeywordSourceTag";
 import "./KeywordSeedPage.css";
 
 const GOAL = 2000;
@@ -63,6 +70,7 @@ export default function KeywordSeedPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const page = Math.max(1, Number(searchParams.get("page") || "1"));
     const source = searchParams.get("source") || "";
+    const trustScope = searchParams.get("trust") === "all" ? "all" : "verified";
     const modeParam = searchParams.get("mode");
     const mode: SearchMode = modeParam === "serp" ? "serp" : "db";
     const [draftQ, setDraftQ] = useState(searchParams.get("q") || "");
@@ -82,6 +90,7 @@ export default function KeywordSeedPage() {
         page,
         per_page: PER_PAGE,
         source: source || undefined,
+        trusted_only: mode === "db" && !source && trustScope === "verified",
         q,
         enabled: mode === "db",
     });
@@ -95,25 +104,49 @@ export default function KeywordSeedPage() {
         isFetching: serpFetching,
     } = useSerpSearch(q, mode === "serp" && serpReady && serpAllowed);
 
-    const hasFilters = Boolean(q || source);
+    const hasFilters = Boolean(q || source || trustScope === "all");
     const dbTotal = platform?.data.keyword_total.value ?? 0;
-    const listTotal = data?.pagination.total;
-    const total = listTotal ?? dbTotal;
     const bySource = platform?.data.keywords_by_source ?? {};
+    const trustedDbTotal = useMemo(
+        () =>
+            TRUSTED_SOURCE_IDS.reduce((sum, id) => sum + (bySource[id] ?? 0), 0),
+        [bySource],
+    );
+    const listTotal = data?.pagination.total;
+    const total = listTotal ?? (trustScope === "verified" ? trustedDbTotal : dbTotal);
 
-    /** Nguồn cho segmented control — kèm số lượng để thấy ngay phân bố. */
+    /** Bộ lọc nguồn — nhãn tiếng Việt, ẩn seed đã ngừng trừ khi DB còn sót. */
     const sourceOptions = useMemo(() => {
-        const known = ["seed", "suggest"];
-        const extra = Object.keys(bySource).filter((k) => !known.includes(k));
+        const catalogIds = new Set(KEYWORD_SOURCES.map((s) => s.id));
+        const extras = Object.keys(bySource).filter((k) => !catalogIds.has(k));
+        const rows = KEYWORD_SOURCES.filter(
+            (s) => s.filterable || (s.id === "seed" && (bySource.seed ?? 0) > 0),
+        ).map((s) => ({
+            id: s.id,
+            label: s.shortLabel,
+            count: bySource[s.id] ?? 0,
+        }));
+        for (const id of extras) {
+            rows.push({ id, label: id, count: bySource[id] ?? 0 });
+        }
+        const scopeCount = trustScope === "verified" ? trustedDbTotal : dbTotal;
         return [
-            { id: "", label: "Tất cả", count: dbTotal },
-            ...[...known, ...extra].map((id) => ({
-                id,
-                label: id,
-                count: bySource[id] ?? 0,
-            })),
+            {
+                id: "",
+                label: trustScope === "verified" ? "Nguồn đáng tin" : "Toàn bộ kho",
+                count: scopeCount,
+            },
+            ...rows.filter((r) => r.count > 0 || KEYWORD_SOURCES.find((s) => s.id === r.id)?.filterable),
         ];
-    }, [bySource, dbTotal]);
+    }, [bySource, dbTotal, trustedDbTotal, trustScope]);
+
+    const sourceCatalogVisible = useMemo(
+        () =>
+            KEYWORD_SOURCES.filter(
+                (s) => s.trusted || (bySource[s.id] ?? 0) > 0,
+            ),
+        [bySource],
+    );
 
     const emptyHint = useMemo(() => {
         if (mode === "serp") return null;
@@ -135,16 +168,16 @@ export default function KeywordSeedPage() {
             };
         }
 
-        if (dbTotal === 0 && (listTotal === undefined || listTotal === 0)) {
+        if (trustedDbTotal === 0 && (listTotal === undefined || listTotal === 0)) {
             return {
-                title: "Chưa có từ khóa trong cơ sở dữ liệu",
-                desc: "Từ thư mục dự án: docker compose up -d db redis api rồi docker compose run --rm api python -m vaschools_mkt.scripts.bootstrap_week1 --skip-migrate",
-                showClearFilters: false,
+                title: "Chưa có từ khóa nguồn đáng tin",
+                desc: "Kho làm việc cần Google Suggest hoặc export GSC. Liên hệ quản trị để chạy đồng bộ trên máy chủ.",
+                showClearFilters: trustScope === "all" || Boolean(source),
             };
         }
 
         return null;
-    }, [mode, isLoading, isError, listTotal, dbTotal, hasFilters, q, source]);
+    }, [mode, isLoading, isError, listTotal, dbTotal, trustedDbTotal, hasFilters, q, source, trustScope]);
 
     function setSearchMode(nextMode: SearchMode) {
         const next = new URLSearchParams(searchParams);
@@ -182,6 +215,14 @@ export default function KeywordSeedPage() {
         setSearchParams(next);
     }
 
+    function setTrustScope(scope: "verified" | "all") {
+        const next = new URLSearchParams(searchParams);
+        next.set("page", "1");
+        if (scope === "all") next.set("trust", "all");
+        else next.delete("trust");
+        setSearchParams(next);
+    }
+
     function clearFilters() {
         setDraftQ("");
         setSearchParams(mode === "serp" ? { mode: "serp" } : {});
@@ -210,56 +251,76 @@ export default function KeywordSeedPage() {
                     <div className="kw-seed__overview">
                         <div className="kw-seed__goal-card anim-rise" style={{ "--stagger-i": 0 } as React.CSSProperties}>
                             <GoalProgress
-                                value={dbTotal}
+                                value={trustedDbTotal}
                                 goal={GOAL}
-                                label="Mục tiêu tuần 1"
-                                hint={
-                                    dbTotal >= GOAL
-                                        ? "Đã đạt mục tiêu tuần 1"
-                                        : `Còn thiếu ${(GOAL - dbTotal).toLocaleString("vi-VN")} từ khóa để đạt mục tiêu tuần 1`
-                                }
+                                label="Kho nguồn đáng tin"
                             />
+                            <p className="kw-seed__goal-note">
+                                Chỉ tính Google Suggest, GSC, PAA và tiêu đề SERP — không gồm seed YAML.
+                            </p>
                         </div>
 
-                        <div className="kw-seed__stats">
-                            {sourceOptions
-                                .filter((o) => o.id !== "")
-                                .map((o, i) => {
-                                    const share = dbTotal > 0 ? (o.count / dbTotal) * 100 : 0;
-                                    return (
-                                        <article
-                                            key={o.id}
-                                            className="stat-card anim-rise"
-                                            style={{ "--stagger-i": i + 1 } as React.CSSProperties}
-                                        >
-                                            <p className="stat-card__label">Nguồn {o.label}</p>
-                                            <p className="stat-card__value">
-                                                {o.count.toLocaleString("vi-VN")}
-                                                <span className="stat-card__unit">
-                                                    {share.toFixed(1)}% kho
+                        <div className="kw-seed__sources">
+                            {sourceCatalogVisible.map((src, i) => {
+                                const count = bySource[src.id] ?? 0;
+                                const share =
+                                    trustedDbTotal > 0 && src.trusted
+                                        ? (count / trustedDbTotal) * 100
+                                        : 0;
+                                return (
+                                    <article
+                                        key={src.id}
+                                        className={`kw-seed__source-card anim-rise${count === 0 ? " kw-seed__source-card--empty" : ""}`}
+                                        style={{ "--stagger-i": i + 1 } as React.CSSProperties}
+                                    >
+                                        <div className="kw-seed__source-card-head">
+                                            <KeywordSourceTag source={src.id} />
+                                            <span
+                                                className={`kw-seed__source-trust kw-seed__source-trust--${src.trust}`}
+                                            >
+                                                {trustLabel(src.trust)}
+                                            </span>
+                                        </div>
+                                        <p className="kw-seed__source-desc">{src.description}</p>
+                                        <p className="kw-seed__source-count">
+                                            {count.toLocaleString("vi-VN")}
+                                            {src.trusted && trustedDbTotal > 0 && count > 0 ? (
+                                                <span className="kw-seed__source-share">
+                                                    {share.toFixed(1)}% kho đáng tin
                                                 </span>
-                                            </p>
-                                            <div className="mini-bar">
-                                                <div
-                                                    className={`mini-bar__fill${o.id === "suggest" ? " mini-bar__fill--teal" : ""}`}
-                                                    style={{ width: `${Math.min(100, share)}%` }}
-                                                />
-                                            </div>
-                                        </article>
-                                    );
-                                })}
+                                            ) : count === 0 ? (
+                                                <span className="kw-seed__source-share">Chưa có</span>
+                                            ) : null}
+                                        </p>
+                                    </article>
+                                );
+                            })}
                             <article
-                                className="stat-card stat-card--warn anim-rise"
-                                style={{ "--stagger-i": sourceOptions.length } as React.CSSProperties}
+                                className="kw-seed__source-card kw-seed__source-card--serp anim-rise"
+                                style={
+                                    {
+                                        "--stagger-i": sourceCatalogVisible.length + 1,
+                                    } as React.CSSProperties
+                                }
                             >
-                                <p className="stat-card__label">Ảnh chụp SERP</p>
-                                <p className="stat-card__value">
+                                <div className="kw-seed__source-card-head">
+                                    <span className="data-tag data-tag--gold">SerpAPI</span>
+                                    <span className="kw-seed__source-trust kw-seed__source-trust--live">
+                                        {trustLabel("live")}
+                                    </span>
+                                </div>
+                                <p className="kw-seed__source-desc">
+                                    Khám phá trực tiếp trên Google VN — không lưu vào kho trừ khi có job
+                                    snapshot.
+                                </p>
+                                <p className="kw-seed__source-count">
                                     {(platform.data.serp_snapshot_total.value ?? 0).toLocaleString(
                                         "vi-VN",
-                                    )}
-                                </p>
-                                <p className="stat-card__sub">
-                                    {serpReady ? "SerpAPI đã cấu hình" : "Chưa cấu hình SerpAPI"}
+                                    )}{" "}
+                                    snapshot
+                                    <span className="kw-seed__source-share">
+                                        {serpReady ? "Đã cấu hình" : "Chưa cấu hình"}
+                                    </span>
                                 </p>
                             </article>
                         </div>
@@ -320,29 +381,67 @@ export default function KeywordSeedPage() {
 
                         {/* Thay dropdown bằng segmented control — số lượng hiện luôn, không cần mở menu */}
                         {mode === "db" ? (
-                            <div className="data-toolbar__field kw-seed__source-field">
-                                <span>Nguồn</span>
-                                <div
-                                    className="segmented"
-                                    role="group"
-                                    aria-label="Lọc theo nguồn"
-                                >
-                                    {sourceOptions.map((o) => (
+                            <>
+                                <div className="data-toolbar__field kw-seed__scope-field">
+                                    <span>Phạm vi kho</span>
+                                    <div
+                                        className="segmented"
+                                        role="group"
+                                        aria-label="Phạm vi kho"
+                                    >
                                         <button
-                                            key={o.id || "all"}
                                             type="button"
-                                            aria-pressed={source === o.id}
-                                            className={`segmented__btn${source === o.id ? " segmented__btn--active" : ""}`}
-                                            onClick={() => setSourceFilter(o.id)}
+                                            aria-pressed={trustScope === "verified"}
+                                            className={`segmented__btn${trustScope === "verified" ? " segmented__btn--active" : ""}`}
+                                            onClick={() => setTrustScope("verified")}
                                         >
-                                            {o.label}
+                                            Nguồn đáng tin
                                             <span className="segmented__count">
-                                                {o.count.toLocaleString("vi-VN")}
+                                                {trustedDbTotal.toLocaleString("vi-VN")}
                                             </span>
                                         </button>
-                                    ))}
+                                        <button
+                                            type="button"
+                                            aria-pressed={trustScope === "all"}
+                                            className={`segmented__btn${trustScope === "all" ? " segmented__btn--active" : ""}`}
+                                            onClick={() => setTrustScope("all")}
+                                        >
+                                            Toàn bộ
+                                            <span className="segmented__count">
+                                                {dbTotal.toLocaleString("vi-VN")}
+                                            </span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                                <div className="data-toolbar__field kw-seed__source-field">
+                                    <span>Lọc nguồn</span>
+                                    <div
+                                        className="segmented kw-seed__source-segmented"
+                                        role="group"
+                                        aria-label="Lọc theo nguồn"
+                                    >
+                                        {sourceOptions.map((o) => (
+                                            <button
+                                                key={o.id || "all"}
+                                                type="button"
+                                                aria-pressed={source === o.id}
+                                                className={`segmented__btn${source === o.id ? " segmented__btn--active" : ""}`}
+                                                onClick={() => setSourceFilter(o.id)}
+                                                title={
+                                                    o.id
+                                                        ? keywordSourceDef(o.id)?.description
+                                                        : undefined
+                                                }
+                                            >
+                                                {o.label}
+                                                <span className="segmented__count">
+                                                    {o.count.toLocaleString("vi-VN")}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
                         ) : null}
 
                         <div className="kw-seed__actions">
@@ -378,19 +477,16 @@ export default function KeywordSeedPage() {
                         </div>
                     </form>
 
-                    {mode === "serp" ? (
-                        <p className="kw-seed__serp-hint">
-                            Mỗi lần tìm ≈ 1 request SerpAPI (có phí). Kết quả gồm gợi ý liên quan,
-                            PAA và top organic Google VN.
-                        </p>
-                    ) : null}
-
                     {mode === "db" && data?.meta?.data_fetched_at ? (
                         <div className="data-meta kw-seed__meta">
                             <span>
                                 <strong>{total.toLocaleString("vi-VN")}</strong> từ khóa khớp
                                 {q ? ` · “${q}”` : ""}
-                                {source ? ` · nguồn ${source}` : ""}
+                                {source
+                                    ? ` · ${keywordSourceDef(source)?.label ?? source}`
+                                    : trustScope === "verified"
+                                      ? " · nguồn đáng tin"
+                                      : ""}
                             </span>
                             <span>Dữ liệu {formatRelativeTime(data.meta.data_fetched_at)}</span>
                         </div>
@@ -465,8 +561,8 @@ export default function KeywordSeedPage() {
                             <EmptyState
                                 variant="panel"
                                 tone="filter"
-                                title="Nhập truy vấn và bấm Tìm trên SERP"
-                                description="SerpAPI trả về từ khóa liên quan, câu hỏi PAA và kết quả organic thật trên Google Việt Nam."
+                                title="Nhập truy vấn để khám phá SERP"
+                                description="Kết quả trực tiếp từ SerpAPI — không ghi vào kho từ khóa."
                             />
                         </div>
                     ) : null}
@@ -479,7 +575,7 @@ export default function KeywordSeedPage() {
                                 variant="panel"
                                 tone="filter"
                                 title={`Tìm “${q}” trên SerpAPI?`}
-                                description="Truy vấn này nằm trong đường dẫn nhưng chưa được gửi. Mỗi lần tìm tốn khoảng 1 request SerpAPI có phí, nên cần bạn xác nhận."
+                                description="Bấm xác nhận để gửi truy vấn (tiêu tốn quota SerpAPI)."
                                 action={
                                     <Button
                                         type="button"
@@ -647,11 +743,10 @@ export default function KeywordSeedPage() {
                                                 </td>
                                                 <td className="kw-seed__kw">{row.text}</td>
                                                 <td>
-                                                    <span
-                                                        className={`data-tag ${row.source === "seed" ? "data-tag--indigo" : row.source === "suggest" ? "data-tag--teal" : "data-tag--slate"}`}
-                                                    >
-                                                        {row.source ?? "—"}
-                                                    </span>
+                                                    <KeywordSourceTag
+                                                        source={row.source}
+                                                        showTrust
+                                                    />
                                                 </td>
                                                 <td>
                                                     <span className="data-tag data-tag--gold">

@@ -71,16 +71,18 @@ async def run(*, dry_run: bool, skip_suggest: bool) -> None:
         )
 
     expanded_set = set(expanded)
+    # Chỉ ghi Google Suggest vào DB. Cụm YAML/tổ hợp chỉ dùng làm đầu vào gọi Suggest.
     rows = [
         {
             "text": text,
             "normalized_text": normalize_keyword(text),
             "location": location,
             "language": language,
-            "source": "suggest" if text in expanded_set else "seed",
+            "source": "suggest",
             "tier": "standard",
         }
         for text in all_texts
+        if text in expanded_set
     ]
 
     if dry_run:

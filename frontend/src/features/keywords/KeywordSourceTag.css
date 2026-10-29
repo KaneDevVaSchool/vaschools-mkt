@@ -1,0 +1,26 @@
+.kw-source-tag {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.kw-source-tag__trust {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-text-subtle);
+}
+
+.kw-source-tag__trust--high {
+    color: color-mix(in srgb, var(--sev-success) 85%, var(--color-text));
+}
+
+.kw-source-tag__trust--medium {
+    color: color-mix(in srgb, var(--color-accent-strong) 75%, var(--color-text-subtle));
+}
+
+.kw-source-tag__trust--deprecated {
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+}

@@ -54,7 +54,7 @@ export const navigationSections: NavSectionConfig[] = [
                 ready: true,
                 module: "N1",
                 description:
-                    "Seed thủ công + Google Suggest. Volume và SERP gắn từ tuần 2 (Keyword Overview).",
+                    "Kho từ khóa nền theo nguồn (Google Suggest, GSC, …). Khám phá thêm qua SerpAPI khi cần.",
             },
             {
                 id: "kw-overview",

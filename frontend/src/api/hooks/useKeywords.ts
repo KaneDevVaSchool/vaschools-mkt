@@ -6,6 +6,8 @@ export type KeywordListParams = {
     page: number;
     per_page?: number;
     source?: string;
+    /** Chỉ suggest, GSC, PAA, serp_title — bỏ seed legacy. */
+    trusted_only?: boolean;
     q?: string;
     enabled?: boolean;
 };
@@ -15,6 +17,7 @@ export function useKeywordList(params: KeywordListParams) {
     sp.set("page", String(params.page));
     sp.set("per_page", String(params.per_page ?? 50));
     if (params.source) sp.set("source", params.source);
+    else if (params.trusted_only) sp.set("trusted_only", "true");
     if (params.q?.trim()) sp.set("q", params.q.trim());
 
     const { enabled = true, ...queryParams } = params;

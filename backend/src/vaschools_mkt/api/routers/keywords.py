@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 
 from vaschools_mkt.api.deps import get_current_user
+from vaschools_mkt.core.keyword_sources import TRUSTED_KEYWORD_SOURCES
 from vaschools_mkt.core.models import SessionUser
 from vaschools_mkt.db.models import Keyword
 from vaschools_mkt.db.session import async_session_factory
@@ -21,6 +22,7 @@ async def list_keywords(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=MAX_PER_PAGE),
     source: str | None = None,
+    trusted_only: bool = False,
     q: str | None = Query(None, min_length=1, max_length=200),
 ):
     per_page = min(per_page, MAX_PER_PAGE)
@@ -33,6 +35,9 @@ async def list_keywords(
         if source:
             base = base.where(Keyword.source == source)
             count_stmt = count_stmt.where(Keyword.source == source)
+        elif trusted_only:
+            base = base.where(Keyword.source.in_(TRUSTED_KEYWORD_SOURCES))
+            count_stmt = count_stmt.where(Keyword.source.in_(TRUSTED_KEYWORD_SOURCES))
         if q:
             like = f"%{q.strip()}%"
             base = base.where(Keyword.text.ilike(like))
